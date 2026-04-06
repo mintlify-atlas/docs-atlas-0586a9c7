@@ -1,0 +1,114 @@
+---
+title: "Domains"
+description: "Add and remove custom domains for use with your shortened links."
+---
+
+Custom domains let you create short links under your own domain instead of `kutt.it`. Once you add a domain to your account, you can specify it when [creating a link](/api-reference/links#create-a-link).
+
+## Domain object
+
+<ResponseField name="id" type="string">
+  Unique identifier (UUID).
+</ResponseField>
+
+<ResponseField name="address" type="string">
+  The domain name (e.g. `links.example.com`).
+</ResponseField>
+
+<ResponseField name="homepage" type="string">
+  Optional URL to redirect visitors to when they access the root of the domain.
+</ResponseField>
+
+<ResponseField name="banned" type="boolean">
+  Whether the domain has been banned.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the domain was added.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the last update.
+</ResponseField>
+
+---
+
+## Add a domain
+
+Add a custom domain to your account.
+
+```
+POST /api/v2/domains
+```
+
+### Request body
+
+<ParamField body="address" type="string" required>
+  The domain name to add (e.g. `links.example.com`). The domain must be configured to point to your Kutt instance before adding it here.
+</ParamField>
+
+<ParamField body="homepage" type="string">
+  A URL to redirect visitors to when they access the root of your custom domain. If omitted, the root redirects to your Kutt instance homepage.
+</ParamField>
+
+### Response
+
+Returns the created domain object.
+
+### Example
+
+```bash
+curl -X POST https://kutt.it/api/v2/domains \
+  -H "X-API-KEY: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "address": "links.example.com",
+    "homepage": "https://example.com"
+  }'
+```
+
+```json
+{
+  "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "address": "links.example.com",
+  "homepage": "https://example.com",
+  "banned": false,
+  "created_at": "2024-01-01T00:00:00.000Z",
+  "updated_at": "2024-01-01T00:00:00.000Z"
+}
+```
+
+---
+
+## Remove a domain
+
+Remove a custom domain from your account. Short links that were created using this domain will no longer resolve.
+
+```
+DELETE /api/v2/domains/:id
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The UUID of the domain to remove.
+</ParamField>
+
+### Response
+
+<ResponseField name="message" type="string">
+  A confirmation message indicating the domain was removed.
+</ResponseField>
+
+### Example
+
+```bash
+curl -X DELETE https://kutt.it/api/v2/domains/b2c3d4e5-f6a7-8901-bcde-f12345678901 \
+  -H "X-API-KEY: your-api-key"
+```
+
+```json
+{
+  "message": "Domain deleted successfully."
+}
+```

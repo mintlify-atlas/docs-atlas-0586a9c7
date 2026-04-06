@@ -1,20 +1,20 @@
 ---
-title: "Kutt — Free Modern URL Shortener"
-description: "Kutt is a self-hostable, open-source URL shortener with custom domains, link statistics, user management, and a RESTful API."
+title: "Introduction"
+description: "Kutt is a free, open-source URL shortener with custom domains, link statistics, and a RESTful API — designed to be self-hosted."
 ---
 
-## Welcome to Kutt
+## What is Kutt?
 
 Kutt is a modern URL shortener you can host yourself. Create short links, attach them to your own custom domains, track click statistics, and manage everything through a clean web UI or the REST API.
 
 <CardGroup cols={2}>
-  <Card title="Quick start" icon="rocket" href="/quickstart">
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
     Get Kutt running locally in minutes with Node.js
   </Card>
-  <Card title="Docker setup" icon="docker" href="/docker">
+  <Card title="Docker Setup" icon="docker" href="/docker">
     Run Kutt with Docker Compose — zero manual setup
   </Card>
-  <Card title="API reference" icon="code" href="/api-reference/overview">
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
     Shorten links programmatically with the REST API
   </Card>
   <Card title="Configuration" icon="gear" href="/configuration/environment-variables">
@@ -44,6 +44,16 @@ Kutt is a modern URL shortener you can host yourself. Create short links, attach
     Connect with ShareX, Alfred, browser extensions, and more
   </Card>
 </CardGroup>
+
+## Supported databases
+
+Kutt works with three database backends — no separate setup needed for the default SQLite option:
+
+| Database | Driver | Notes |
+|---|---|---|
+| SQLite | `better-sqlite3` | Default — no extra service needed |
+| PostgreSQL | `pg` | Recommended for production |
+| MySQL / MariaDB | `mysql2` | Full feature parity |
 
 ## Open source
 

@@ -1,0 +1,70 @@
+---
+title: "Users"
+description: "Retrieve your account information including your API key and linked domains."
+---
+
+## Get user info
+
+Retrieve details about the authenticated user, including your API key and the custom domains linked to your account.
+
+```
+GET /api/v2/users
+```
+
+### Response
+
+<ResponseField name="apikey" type="string">
+  Your current API key.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address associated with your account.
+</ResponseField>
+
+<ResponseField name="domains" type="object[]">
+  An array of custom domains linked to your account.
+  <Expandable title="Domain properties">
+    <ResponseField name="id" type="string">
+      Unique identifier (UUID).
+    </ResponseField>
+    <ResponseField name="address" type="string">
+      The domain name (e.g. `links.example.com`).
+    </ResponseField>
+    <ResponseField name="homepage" type="string">
+      URL visitors are redirected to when accessing the root of the domain.
+    </ResponseField>
+    <ResponseField name="banned" type="boolean">
+      Whether the domain has been banned.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the domain was added.
+    </ResponseField>
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp of the last update.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```bash
+curl https://kutt.it/api/v2/users \
+  -H "X-API-KEY: your-api-key"
+```
+
+```json
+{
+  "apikey": "your-api-key",
+  "email": "you@example.com",
+  "domains": [
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "address": "links.example.com",
+      "homepage": "https://example.com",
+      "banned": false,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```

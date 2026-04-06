@@ -1,0 +1,116 @@
+---
+title: "Environment variables"
+description: "Configure Kutt by setting environment variables or creating a .env file."
+---
+
+Kutt is configured entirely through environment variables. You can pass them directly to the process or place them in a `.env` file at the root of the project.
+
+## Getting started
+
+Copy the example file and fill in your values:
+
+```bash
+cp .example.env .env
+```
+
+Then open `.env` in your editor and set the variables you need. All variables are optional except `JWT_SECRET`, which is required when running in production.
+
+## Secret files
+
+Any variable can be loaded from a file by appending `_FILE` to its name. Kutt reads the file at the given path and uses its contents as the variable's value. This is useful with Docker secrets or similar secret management systems.
+
+```bash
+# Instead of this:
+JWT_SECRET=my-long-random-string
+
+# You can do this:
+JWT_SECRET_FILE=/run/secrets/jwt_secret
+```
+
+If the file cannot be read, the `_FILE` variable is silently ignored and Kutt falls back to the plain variable or its default.
+
+---
+
+## General
+
+<ParamField path="JWT_SECRET" type="string" required>
+  A passphrase used to sign authentication tokens. Use a long, random string. Required in production — the app will refuse to start without it.
+</ParamField>
+
+<ParamField path="PORT" type="number" default="3000">
+  The port the HTTP server listens on.
+</ParamField>
+
+<ParamField path="SITE_NAME" type="string" default="Kutt">
+  The display name of the site, shown in the UI and outgoing emails.
+</ParamField>
+
+<ParamField path="DEFAULT_DOMAIN" type="string" default="localhost:3000">
+  The domain this instance runs on (e.g. `kutt.example.com`). Used to construct short links.
+</ParamField>
+
+<ParamField path="LINK_LENGTH" type="number" default="6">
+  The number of characters in auto-generated short link slugs.
+</ParamField>
+
+<ParamField path="LINK_CUSTOM_ALPHABET" type="string" default="abcdefghkmnpqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789">
+  The character set used when generating slugs. The default omits `o`, `O`, `0`, `i`, `I`, `l`, `1`, and `j` to reduce visual ambiguity.
+</ParamField>
+
+<ParamField path="TRUST_PROXY" type="boolean" default="true">
+  When `true`, Kutt reads the client IP from proxy headers (e.g. `X-Forwarded-For`). Set to `false` if you are not running behind a reverse proxy such as NGINX or Cloudflare — otherwise users can spoof their IP address.
+</ParamField>
+
+---
+
+## Access control
+
+<ParamField path="DISALLOW_REGISTRATION" type="boolean" default="true">
+  When `true`, new user registration is disabled. Note that registration is also implicitly disabled when `MAIL_ENABLED=false` because Kutt requires email verification to sign up users.
+</ParamField>
+
+<ParamField path="DISALLOW_LOGIN_FORM" type="boolean" default="false">
+  When `true`, the email/password login form is hidden. Only useful when `OIDC_ENABLED=true` and you want to force all logins through your identity provider.
+</ParamField>
+
+<ParamField path="DISALLOW_ANONYMOUS_LINKS" type="boolean" default="true">
+  When `true`, unauthenticated visitors cannot create short links.
+</ParamField>
+
+---
+
+## Rate limiting
+
+<ParamField path="ENABLE_RATE_LIMIT" type="boolean" default="false">
+  When `true`, rate limiting is applied to certain API routes. Uses Redis for distributed limiting when `REDIS_ENABLED=true`, otherwise falls back to in-process memory.
+</ParamField>
+
+---
+
+## Server info
+
+These variables are displayed to users on the settings page. They have no effect on routing or SSL — they are purely informational.
+
+<ParamField path="SERVER_IP_ADDRESS" type="string" default="">
+  The IP address shown to users when they configure a custom domain (e.g. `1.2.3.4`).
+</ParamField>
+
+<ParamField path="SERVER_CNAME_ADDRESS" type="string" default="">
+  The CNAME target shown to users when they configure a custom domain (e.g. `custom.yoursite.com`).
+</ParamField>
+
+<ParamField path="CUSTOM_DOMAIN_USE_HTTPS" type="boolean" default="false">
+  When `true`, links using custom domains are constructed with `https://`. You are responsible for provisioning SSL certificates for those domains.
+</ParamField>
+
+---
+
+## Contact
+
+<ParamField path="REPORT_EMAIL" type="string" default="">
+  The email address that receives link reports submitted by users. Requires `MAIL_ENABLED=true`.
+</ParamField>
+
+<ParamField path="CONTACT_EMAIL" type="string" default="">
+  A support email address displayed in the app UI.
+</ParamField>

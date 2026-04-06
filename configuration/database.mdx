@@ -1,0 +1,170 @@
+---
+title: "Database"
+description: "Kutt supports SQLite, PostgreSQL, and MySQL/MariaDB. Choose the right backend for your deployment."
+---
+
+Kutt uses [Knex.js](https://knexjs.org/) for database access and supports three database engines out of the box. Select the one that best fits your infrastructure.
+
+<Tip>
+  Use PostgreSQL for production deployments. It offers better concurrency, reliability, and connection pooling compared to SQLite.
+</Tip>
+
+## Choosing a client
+
+Set `DB_CLIENT` to one of the following values:
+
+| Value | Database | Installed by default |
+|---|---|---|
+| `better-sqlite3` | SQLite | Yes |
+| `pg` | PostgreSQL | Yes |
+| `mysql2` | MySQL / MariaDB | Yes |
+| `pg-native` | PostgreSQL (native bindings) | No — run `npm install pg-native` |
+| `sqlite3` | SQLite (legacy driver) | No — run `npm install sqlite3` |
+| `mysql` | MySQL (legacy driver) | No — run `npm install mysql` |
+
+## Running migrations
+
+After configuring your database, run migrations before starting the server for the first time (and after each upgrade):
+
+```bash
+npm run migrate
+```
+
+---
+
+## Configuration by database
+
+<Tabs>
+  <Tab title="SQLite">
+    SQLite requires no external service. Kutt stores everything in a single file on disk, making it ideal for development, testing, or single-server deployments with low traffic.
+
+    <Note>
+      SQLite does not support concurrent writes well. For multi-process or high-traffic setups, switch to PostgreSQL or MySQL.
+    </Note>
+
+    ```bash
+    DB_CLIENT=better-sqlite3
+
+    # Path to the SQLite database file (directory must exist)
+    DB_FILENAME=db/data
+    ```
+
+    <ParamField path="DB_CLIENT" type="string" default="better-sqlite3">
+      Set to `better-sqlite3` to use the default SQLite driver.
+    </ParamField>
+
+    <ParamField path="DB_FILENAME" type="string" default="db/data">
+      File path for the SQLite database. Kutt creates the file if it does not exist. The directory must already exist.
+    </ParamField>
+  </Tab>
+
+  <Tab title="PostgreSQL">
+    PostgreSQL is the recommended choice for production. It supports connection pooling, SSL, and concurrent access.
+
+    ```bash
+    DB_CLIENT=pg
+
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_NAME=kutt
+    DB_USER=postgres
+    DB_PASSWORD=your-password
+
+    # Optional
+    DB_SSL=false
+    DB_POOL_MIN=0
+    DB_POOL_MAX=10
+    ```
+
+    <ParamField path="DB_CLIENT" type="string" required>
+      Set to `pg` for PostgreSQL.
+    </ParamField>
+
+    <ParamField path="DB_HOST" type="string" default="localhost">
+      Hostname or IP address of the PostgreSQL server.
+    </ParamField>
+
+    <ParamField path="DB_PORT" type="number" default="5432">
+      Port the PostgreSQL server listens on.
+    </ParamField>
+
+    <ParamField path="DB_NAME" type="string" default="kutt">
+      Name of the database to connect to.
+    </ParamField>
+
+    <ParamField path="DB_USER" type="string" default="postgres">
+      Database user.
+    </ParamField>
+
+    <ParamField path="DB_PASSWORD" type="string" default="">
+      Password for the database user.
+    </ParamField>
+
+    <ParamField path="DB_SSL" type="boolean" default="false">
+      When `true`, the connection is made over SSL/TLS.
+    </ParamField>
+
+    <ParamField path="DB_POOL_MIN" type="number" default="0">
+      Minimum number of connections to keep in the pool.
+    </ParamField>
+
+    <ParamField path="DB_POOL_MAX" type="number" default="10">
+      Maximum number of connections in the pool.
+    </ParamField>
+  </Tab>
+
+  <Tab title="MySQL / MariaDB">
+    MySQL and MariaDB are supported via the `mysql2` driver and use the same connection variables as PostgreSQL.
+
+    ```bash
+    DB_CLIENT=mysql2
+
+    DB_HOST=localhost
+    DB_PORT=3306      # MySQL/MariaDB default
+    DB_NAME=kutt
+    DB_USER=kutt
+    DB_PASSWORD=your-password
+
+    # Optional
+    DB_SSL=false
+    DB_POOL_MIN=0
+    DB_POOL_MAX=10
+    ```
+
+    <ParamField path="DB_CLIENT" type="string" required>
+      Set to `mysql2` for MySQL or MariaDB.
+    </ParamField>
+
+    <ParamField path="DB_HOST" type="string" default="localhost">
+      Hostname or IP address of the MySQL/MariaDB server.
+    </ParamField>
+
+    <ParamField path="DB_PORT" type="number" default="3306">
+      Port the database server listens on. The default MySQL/MariaDB port is `3306`.
+    </ParamField>
+
+    <ParamField path="DB_NAME" type="string" default="kutt">
+      Name of the database to connect to.
+    </ParamField>
+
+    <ParamField path="DB_USER" type="string" default="kutt">
+      Database user.
+    </ParamField>
+
+    <ParamField path="DB_PASSWORD" type="string" default="">
+      Password for the database user.
+    </ParamField>
+
+    <ParamField path="DB_SSL" type="boolean" default="false">
+      When `true`, the connection is made over SSL/TLS.
+    </ParamField>
+
+    <ParamField path="DB_POOL_MIN" type="number" default="0">
+      Minimum number of connections to keep in the pool.
+    </ParamField>
+
+    <ParamField path="DB_POOL_MAX" type="number" default="10">
+      Maximum number of connections in the pool.
+    </ParamField>
+  </Tab>
+</Tabs>

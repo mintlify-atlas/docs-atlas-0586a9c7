@@ -1,0 +1,276 @@
+---
+title: "Docker"
+description: "Run Kutt with Docker Compose — the fastest way to get a production-ready instance."
+---
+
+## Prerequisites
+
+[Docker](https://docs.docker.com/get-docker/) must be installed on your machine.
+
+## Docker Hub image
+
+The official Kutt image is published on Docker Hub as [`kutt/kutt`](https://hub.docker.com/r/kutt/kutt).
+
+## Compose configurations
+
+Kutt ships four Docker Compose files for different infrastructure setups. Run the one that matches your needs from the project root directory.
+
+<Tabs>
+  <Tab title="SQLite (default)">
+    The default configuration. Uses SQLite for the database with no external services required.
+
+    ```bash
+    docker compose up
+    ```
+
+    **`docker-compose.yml`**
+
+    ```yaml
+    services:
+      server:
+        build:
+          context: .
+        volumes:
+           - db_data_sqlite:/var/lib/kutt
+           - custom:/kutt/custom
+        environment:
+          DB_FILENAME: "/var/lib/kutt/data.sqlite"
+        ports:
+          - 3000:3000
+    volumes:
+      db_data_sqlite:
+      custom:
+    ```
+
+    The SQLite database is stored in the `db_data_sqlite` named volume so it persists across container restarts.
+  </Tab>
+
+  <Tab title="SQLite + Redis">
+    Adds a Redis container for caching. Requires `REDIS_ENABLED=true` to be set in your environment.
+
+    ```bash
+    REDIS_ENABLED=true docker compose -f docker-compose.sqlite-redis.yml up
+    ```
+
+    **`docker-compose.sqlite-redis.yml`**
+
+    ```yaml
+    services:
+      server:
+        build:
+          context: .
+        volumes:
+          - db_data_sqlite:/var/lib/kutt
+          - custom:/kutt/custom
+        environment:
+          DB_FILENAME: "/var/lib/kutt/data.sqlite"
+          REDIS_ENABLED: true
+          REDIS_HOST: redis
+          REDIS_PORT: 6379
+        ports:
+          - 3000:3000
+        depends_on:
+          redis:
+            condition: service_started
+      redis:
+        image: redis:alpine
+        restart: always
+        expose:
+          - 6379
+    volumes:
+      db_data_sqlite:
+      custom:
+    ```
+
+    **Required environment variable:** `REDIS_ENABLED=true`
+  </Tab>
+
+  <Tab title="PostgreSQL + Redis">
+    Uses PostgreSQL as the database and Redis for caching. The Kutt server waits for PostgreSQL to pass a health check before starting.
+
+    ```bash
+    REDIS_ENABLED=true \
+    DB_PASSWORD=yourpassword \
+    DB_NAME=kutt \
+    DB_USER=postgres \
+    docker compose -f docker-compose.postgres.yml up
+    ```
+
+    **`docker-compose.postgres.yml`**
+
+    ```yaml
+    services:
+      server:
+        build:
+          context: .
+        volumes:
+          - custom:/kutt/custom
+        environment:
+            DB_CLIENT: pg
+            DB_HOST: postgres
+            DB_PORT: 5432
+            REDIS_ENABLED: true
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+        ports:
+          - 3000:3000
+        depends_on:
+          postgres:
+            condition: service_healthy
+          redis:
+            condition: service_started
+      postgres:
+        image: postgres
+        restart: always
+        user: ${DB_USER}
+        volumes:
+          - db_data_pg:/var/lib/postgresql/data
+        environment:
+          POSTGRES_DB: ${DB_NAME}
+          POSTGRES_PASSWORD: ${DB_PASSWORD}
+        expose:
+          - 5432
+        healthcheck:
+          test: [ "CMD", "pg_isready" ]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+      redis:
+        image: redis:alpine
+        restart: always
+        expose:
+          - 6379
+    volumes:
+      db_data_pg:
+      custom:
+    ```
+
+    **Required environment variables:** `REDIS_ENABLED`, `DB_PASSWORD`, `DB_NAME`, `DB_USER`
+  </Tab>
+
+  <Tab title="MariaDB + Redis">
+    Uses MariaDB as the database and Redis for caching. The Kutt server waits for MariaDB to pass a health check before starting.
+
+    ```bash
+    REDIS_ENABLED=true \
+    DB_PASSWORD=yourpassword \
+    DB_NAME=kutt \
+    DB_USER=kutt \
+    DB_PORT=3306 \
+    docker compose -f docker-compose.mariadb.yml up
+    ```
+
+    **`docker-compose.mariadb.yml`**
+
+    ```yaml
+    services:
+      server:
+        build:
+          context: .
+        volumes:
+          - custom:/kutt/custom
+        environment:
+            DB_CLIENT: mysql2
+            DB_HOST: mariadb
+            DB_PORT: 3306
+            REDIS_ENABLED: true
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+        ports:
+          - 3000:3000
+        depends_on:
+          mariadb:
+            condition: service_healthy
+          redis:
+            condition: service_started
+      mariadb:
+        image: mariadb:10
+        restart: always
+        healthcheck:
+          test: ['CMD-SHELL', 'mysql ${DB_NAME} --user=${DB_USER} --password=${DB_PASSWORD} --execute "SELECT 1;"']
+          interval: 3s
+          retries: 5
+          start_period: 30s
+        volumes:
+          - db_data_mariadb:/var/lib/mysql
+        environment:
+          MARIADB_DATABASE: ${DB_NAME}
+          MARIADB_USER: ${DB_USER}
+          MARIADB_PASSWORD: ${DB_PASSWORD}
+          MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+        expose:
+          - 3306
+      redis:
+        image: redis:alpine
+        restart: always
+        expose:
+          - 6379
+    volumes:
+      data_mariadb:
+      custom:
+    ```
+
+    **Required environment variables:** `REDIS_ENABLED`, `DB_PASSWORD`, `DB_NAME`, `DB_USER`, `DB_PORT`
+  </Tab>
+</Tabs>
+
+## Passing environment variables
+
+You can inject any [environment variable](/configuration/environment-variables) by exporting it before running `docker compose`, or by placing them in a `.env` file in the project root. Docker Compose automatically reads `.env` files.
+
+```bash
+# .env
+JWT_SECRET=your-long-random-secret-here
+DEFAULT_DOMAIN=yourdomain.com
+REDIS_ENABLED=true
+DB_PASSWORD=yourpassword
+DB_NAME=kutt
+DB_USER=postgres
+```
+
+Then start with:
+
+```bash
+docker compose -f docker-compose.postgres.yml up
+```
+
+You can also use `_FILE`-suffixed variables to read secrets from files, for example with Docker secrets:
+
+```bash
+JWT_SECRET_FILE=/run/secrets/jwt_secret
+```
+
+## Custom themes and files
+
+The `custom` named volume is mounted at `/kutt/custom` inside the container. This is where Kutt looks for custom CSS, images, and HTML templates.
+
+If you are using the official `kutt/kutt` image and want to add custom files, copy them into the running container using `docker cp`:
+
+```bash
+docker cp custom kutt-server-1:/kutt
+```
+
+Replace `kutt-server-1` with the actual name of your Kutt container (check with `docker ps`).
+
+<Note>
+  Restart the Kutt server container after copying custom files for the changes to take effect.
+
+  ```bash
+  docker restart kutt-server-1
+  ```
+</Note>
+
+The `custom/` directory structure Kutt expects:
+
+```
+custom/
+├── css/          # CSS files served at /css/<file>.css
+├── images/       # Images served at /images/<image>
+└── views/        # Handlebars templates (must match server/views structure)
+```
+
+For more on theming, see the [Kutt customizations repository](https://github.com/thedevs-network/kutt-customizations).
+
+## Further configuration
+
+For the full list of environment variables you can pass to the container, see [Environment variables](/configuration/environment-variables).

@@ -1,0 +1,173 @@
+---
+title: "Link management"
+description: "Create, edit, and manage shortened links with custom slugs, passwords, expiry dates, and descriptions."
+---
+
+## Overview
+
+The link dashboard is your central hub for managing all your shortened URLs. From here you can search through your links, paginate through results, and take action on any individual link.
+
+Each page shows up to 10 links by default. Use the `limit` and `skip` query parameters when calling the API to control pagination. A `total` field in every response tells you how many links exist in total so you can calculate page counts.
+
+Use the search field to filter links by address, target URL, or description. The search query is passed as a `search` query parameter.
+
+---
+
+## Creating a link
+
+The only required field when creating a link is the **target URL** — the destination you want to shorten. All other fields are optional.
+
+<Steps>
+  <Step title="Enter the target URL">
+    Paste the destination URL into the target field. The URL must be valid and cannot point back to your own Kutt instance's default domain. Maximum length is 2040 characters.
+  </Step>
+  <Step title="Configure optional fields">
+    Fill in any of the optional fields described below.
+  </Step>
+  <Step title="Submit">
+    Click the shorten button. You receive the new short link immediately.
+  </Step>
+</Steps>
+
+### Optional fields
+
+<CardGroup cols={2}>
+  <Card title="Custom slug" icon="link">
+    Provide a custom address (slug) for your link instead of an auto-generated one. Length must be between 1 and 64 characters. You cannot use a slug that is already taken on the same domain.
+  </Card>
+  <Card title="Description" icon="text">
+    Add a human-readable description for your own reference. Up to 2040 characters. Not shown to link visitors.
+  </Card>
+  <Card title="Password protection" icon="lock">
+    Set a password (3–64 characters) that visitors must enter before being redirected. Only available to logged-in users.
+  </Card>
+  <Card title="Expiry time" icon="clock">
+    Set an expiration date using a plain-English duration string. The link stops redirecting after this time. Must be at least 1 minute in the future.
+  </Card>
+  <Card title="Custom domain" icon="globe">
+    If you have a custom domain configured in Settings, you can serve this link from that domain instead of the default domain.
+  </Card>
+  <Card title="Reuse existing link" icon="arrow-rotate-right">
+    If you already have a short link pointing to the same target URL on the same domain, enabling **reuse** returns the existing link instead of creating a new one.
+  </Card>
+</CardGroup>
+
+#### Expiry time format
+
+The `expire_in` field accepts any duration string understood by the [`ms`](https://github.com/vercel/ms) library. Examples:
+
+```
+1m         → 1 minute
+30m        → 30 minutes
+2 hours    → 2 hours
+8h         → 8 hours
+5 days     → 5 days
+1 week     → 1 week
+```
+
+The minimum expiry is 1 minute. There is no maximum.
+
+---
+
+## Editing a link
+
+You can update a link after it has been created. The following fields can be changed:
+
+| Field | Notes |
+|---|---|
+| `address` | New slug. Must not conflict with an existing link on the same domain. |
+| `target` | New destination URL. |
+| `description` | Replace or clear the description. |
+| `expire_in` | Set a new expiry time. Changes smaller than 60 seconds are ignored. |
+| `password` | Set or change the password. To remove an existing password, clear the field. |
+
+At least one field must differ from the current value, otherwise the request is rejected with an error.
+
+---
+
+## Deleting a link
+
+To delete a link, select it from the dashboard and confirm the deletion. Deleted links cannot be recovered.
+
+When a link is deleted, all associated visit statistics are also removed (visits are cascade-deleted at the database level).
+
+---
+
+## Password-protected links
+
+When a link has a password set, visitors who follow the short URL are shown a password entry form instead of being redirected immediately. They must enter the correct password to proceed.
+
+Alternatively, visitors can authenticate programmatically via HTTP Basic Auth by including the password in the `Authorization` header:
+
+```
+Authorization: Basic <base64(":<password>")>
+```
+
+<Note>
+  The username portion of the Basic Auth credential is ignored — only the password (after the colon) is checked.
+</Note>
+
+Stats are recorded for password-protected links only after the correct password is submitted.
+
+---
+
+## Anonymous links
+
+By default, Kutt requires users to be logged in to create links. This is controlled by the `DISALLOW_ANONYMOUS_LINKS` environment variable.
+
+| Setting | Behaviour |
+|---|---|
+| `DISALLOW_ANONYMOUS_LINKS=true` (default) | Only authenticated users can create links. Anonymous requests to `POST /api/v2/links` are rejected. |
+| `DISALLOW_ANONYMOUS_LINKS=false` | Anyone can create links without an account. |
+
+<Warning>
+  When anonymous link creation is enabled, features like custom slugs, passwords, expiry times, and custom domains are still restricted to logged-in users. Anonymous links are also not tracked in statistics.
+</Warning>
+
+---
+
+## Link address settings
+
+Two environment variables control how auto-generated link addresses are produced:
+
+### `LINK_LENGTH`
+
+Controls the length of auto-generated slugs.
+
+```env
+LINK_LENGTH=6   # default — produces slugs like "aB3kPz"
+```
+
+Shorter slugs are easier to type but exhaust the available address space faster.
+
+### `LINK_CUSTOM_ALPHABET`
+
+Defines the set of characters used when generating slugs. The default alphabet deliberately omits characters that look similar (`o`, `O`, `0`, `i`, `I`, `l`, `1`, `j`) to avoid confusion when reading a URL aloud or transcribing it manually.
+
+```env
+# Default
+LINK_CUSTOM_ALPHABET=abcdefghkmnpqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789
+
+# Example: alphanumeric only
+LINK_CUSTOM_ALPHABET=abcdefghijklmnopqrstuvwxyz0123456789
+```
+
+<Tip>
+  Custom slugs submitted by users are validated against both the standard address regex and the custom alphabet regex, so they are not constrained to the alphabet you define here.
+</Tip>
+
+---
+
+## Programmatic link management
+
+All link operations are available via the REST API. See [API reference: Links](/api-reference/links) for full request and response schemas.
+
+```http
+GET    /api/v2/links           # List your links
+POST   /api/v2/links           # Create a link
+PATCH  /api/v2/links/:id       # Edit a link
+DELETE /api/v2/links/:id       # Delete a link
+GET    /api/v2/links/:id/stats # Get link statistics
+```
+
+All API requests require your API key in the `X-API-KEY` header.

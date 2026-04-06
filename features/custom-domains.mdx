@@ -1,0 +1,104 @@
+---
+title: "Custom domains"
+description: "Serve shortened links from your own domain name by connecting a custom domain to Kutt."
+---
+
+## What custom domains do
+
+By default, every link you create is served from your Kutt instance's primary domain (for example, `kutt.example.com/abc123`). With a custom domain, the same link is served from a domain you own — for example, `go.yourbrand.com/abc123`.
+
+Custom domains are per-user. Each user can register their own domains from the Settings page and choose which domain to use when creating a link.
+
+---
+
+## Adding a custom domain
+
+<Steps>
+  <Step title="Open Settings">
+    Log in and navigate to the **Settings** page.
+  </Step>
+  <Step title="Enter the domain address">
+    Type your domain name (e.g. `go.yourbrand.com`). The `www.` prefix is stripped automatically if you include it.
+  </Step>
+  <Step title="Set an optional homepage URL">
+    If you want visitors who access the bare domain (e.g. `go.yourbrand.com/`) to be redirected somewhere, enter a homepage URL. Leave it blank to show a 404 page for the bare domain.
+  </Step>
+  <Step title="Save">
+    Click **Add domain**. Kutt stores your domain immediately. You still need to configure DNS before links will resolve.
+  </Step>
+</Steps>
+
+<Note>
+  A domain can only be registered by one user at a time. If a domain is already claimed by another user, or has been banned by an admin, you will not be able to add it.
+</Note>
+
+---
+
+## DNS configuration
+
+After adding the domain in Kutt, point your domain's DNS records to your Kutt server. You have two options:
+
+### Option A — CNAME record (recommended for subdomains)
+
+Add a CNAME record on your domain pointing to the value shown in your Settings page. This value comes from the `SERVER_CNAME_ADDRESS` environment variable on your Kutt instance.
+
+```
+Type:  CNAME
+Name:  go          (or @ for the apex domain — check your DNS provider's support)
+Value: custom.yourkutt.com
+```
+
+### Option B — A record (IP address)
+
+Add an A record pointing to the IP address of your Kutt server. This value comes from the `SERVER_IP_ADDRESS` environment variable.
+
+```
+Type:  A
+Name:  go
+Value: 1.2.3.4
+```
+
+<Info>
+  `SERVER_IP_ADDRESS` and `SERVER_CNAME_ADDRESS` are purely informational — they control what text is displayed in the Settings UI to guide users during setup. Changing them does not affect how Kutt processes requests.
+</Info>
+
+DNS changes can take anywhere from a few minutes to 48 hours to propagate depending on your DNS provider and TTL settings.
+
+---
+
+## HTTPS for custom domains
+
+By default, Kutt serves custom domain links over HTTP. To enable HTTPS, set the following environment variable:
+
+```env
+CUSTOM_DOMAIN_USE_HTTPS=true
+```
+
+<Warning>
+  Setting `CUSTOM_DOMAIN_USE_HTTPS=true` only changes the protocol prefix used when constructing short link URLs. You are responsible for obtaining and installing SSL certificates for each custom domain on your server — Kutt does not provision certificates automatically.
+</Warning>
+
+A common approach is to run Kutt behind a reverse proxy (such as NGINX or Caddy) that handles TLS termination per domain.
+
+---
+
+## Custom domain homepage
+
+When a visitor accesses your bare custom domain (e.g. `go.yourbrand.com/` or any unrecognised path), Kutt checks whether the domain has a homepage URL configured:
+
+- **Homepage set** — the visitor is redirected (HTTP 302) to the homepage URL.
+- **No homepage** — the visitor is redirected to the Kutt instance's `/404` page.
+
+You can set or update the homepage URL at any time from the domain settings in the Settings page.
+
+---
+
+## Removing a custom domain
+
+To remove a domain from your account, open **Settings**, find the domain in the list, and click the delete button. Removing a domain disassociates it from your account but does not delete the links that were created under it — those links simply stop resolving until the domain is re-added.
+
+---
+
+## Admin domain management
+
+Admins can view, add, remove, and ban any domain across the entire Kutt instance from the admin panel. See [Admin dashboard](/features/admin) for details on admin-level domain controls.

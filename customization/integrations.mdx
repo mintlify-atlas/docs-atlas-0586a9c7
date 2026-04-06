@@ -1,0 +1,58 @@
+---
+title: "Integrations"
+description: "Connect Kutt with browser extensions, desktop apps, ShareX, Alfred, and third-party API clients."
+---
+
+<Note>
+All integrations that call the Kutt API require an API key. You can generate one from the **Settings** page in your Kutt account. See [Authentication](/api-reference/authentication) for details.
+</Note>
+
+## Browser extensions
+
+Install the Kutt extension to shorten URLs directly from your browser toolbar.
+
+<CardGroup cols={2}>
+  <Card title="Chrome extension" icon="chrome" href="https://chrome.google.com/webstore/detail/kutt/pklakpjfiegjacoppcodencchehlfnpd">
+    Install from the Chrome Web Store.
+  </Card>
+  <Card title="Firefox add-on" icon="firefox" href="https://addons.mozilla.org/en-US/firefox/addon/kutt/">
+    Install from Mozilla Add-ons.
+  </Card>
+</CardGroup>
+
+## ShareX
+
+[ShareX](https://getsharex.com/) can use Kutt as its default URL shortener.
+
+If you're using the hosted [kutt.to](https://kutt.to) service, select Kutt from ShareX's built-in URL shortener list and enter your API key.
+
+If you're running a self-hosted instance, follow the [ShareX setup guide](https://github.com/thedevs-network/kutt/wiki/ShareX) on the Kutt wiki to point ShareX at your own domain.
+
+## Alfred workflow
+
+Shorten URLs from [Alfred](https://www.alfredapp.com/) on macOS using the official workflow.
+
+Download and configure it from the [alfred-kutt](https://github.com/thedevs-network/alfred-kutt) repository. You'll need your Kutt API key during setup.
+
+## iOS shortcut
+
+The [Kutt shortcut](https://www.icloud.com/shortcuts/a829856aea2c420e97c53437e68b752b) lets you shorten URLs from the iOS sharing context menu or as a standalone shortcut. Add it to your device and enter your API key when prompted.
+
+## Third-party API clients
+
+Community-maintained packages for working with the Kutt API in various languages:
+
+| Language | Package | Description |
+|---|---|---|
+| C# (.NET) | [KuttSharp](https://github.com/0xaryan/KuttSharp) | .NET package for Kutt.it |
+| C# (.NET) | [Kutt.NET](https://github.com/AlphaNecron/Kutt.NET) | C# API Wrapper for Kutt |
+| Python | [kutt-cli](https://github.com/RealAmirali/kutt-cli) | Command-line client for Kutt written in Python |
+| Ruby | [kutt.rb](https://github.com/RealAmirali/kutt.rb) | Kutt library written in Ruby |
+| Rust | [urlshortener](https://github.com/vityafx/urlshortener-rs) | URL shortener library written in Rust |
+| Rust | [kutt-rs](https://github.com/robatipoor/kutt-rs) | Command line tool written in Rust |
+| Node.js | [node-kutt](https://github.com/ardalanamini/node-kutt) | Node.js client for Kutt.it |
+| Go | [kutt-go](https://github.com/raahii/kutt-go) | Go client for Kutt.it |
+
+## Kubernetes / Helm
+
+Deploy Kutt on a Kubernetes cluster using the community Helm chart, available on [ArtifactHub](https://artifacthub.io/packages/helm/christianhuth/kutt).

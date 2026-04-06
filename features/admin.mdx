@@ -1,0 +1,255 @@
+---
+title: "Admin dashboard"
+description: "Manage all users, links, and domains across your Kutt instance from the admin panel."
+---
+
+## Becoming an admin
+
+When you first start Kutt, you are prompted to create an admin account. This initial account is automatically granted admin privileges. Subsequent registrations create regular user accounts unless an existing admin explicitly assigns the admin role.
+
+Admins can also grant admin status to other users when creating them via the admin panel by setting the `role` field to `admin`.
+
+---
+
+## Admin capabilities
+
+Admins have elevated access to all resources on the Kutt instance — users, links, and domains — regardless of ownership.
+
+<CardGroup cols={3}>
+  <Card title="Users" icon="users">
+    View all user accounts. Create new users, ban users (optionally banning their links and domains too), and delete users entirely.
+  </Card>
+  <Card title="Links" icon="link">
+    View all links across every user. Edit any link's address, target, description, expiry, or password. Ban links so they return an error to visitors. Delete any link.
+  </Card>
+  <Card title="Domains" icon="globe">
+    View all custom domains registered on the instance. Add new domains (including banned domains for blocklisting). Delete any domain (optionally deleting all its links). Ban domains and their associated users or links.
+  </Card>
+</CardGroup>
+
+---
+
+## User management
+
+### View all users
+
+```http
+GET /api/v2/users/admin
+X-API-KEY: <admin-api-key>
+```
+
+Supports query parameters for filtering and pagination:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `limit` | number | Max results to return (default 10) |
+| `skip` | number | Number of results to skip |
+| `search` | string | Filter by email |
+| `role` | string | Filter by role (`user` or `admin`) |
+| `verified` | boolean | Filter by email-verified status |
+| `banned` | boolean | Filter by banned status |
+
+### Create a user
+
+```http
+POST /api/v2/users/admin
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "securepassword",
+  "role": "user",
+  "verified": true,
+  "banned": false,
+  "verification_email": false
+}
+```
+
+Set `verification_email: true` to send a verification email to the new user (requires `MAIL_ENABLED=true`).
+
+### Delete a user
+
+```http
+DELETE /api/v2/users/admin/:id
+X-API-KEY: <admin-api-key>
+```
+
+Deletes the user and all their associated data.
+
+### Ban a user
+
+```http
+POST /api/v2/users/admin/ban/:id
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "links": true,
+  "domains": true
+}
+```
+
+| Body field | Description |
+|---|---|
+| `links` | When `true`, also bans all links belonging to this user. |
+| `domains` | When `true`, also bans all domains belonging to this user. |
+
+Banned users cannot log in or use the API.
+
+---
+
+## Link management
+
+### View all links (admin)
+
+```http
+GET /api/v2/links?all=true
+X-API-KEY: <admin-api-key>
+```
+
+The `all=true` parameter is restricted to admin accounts. Without it, the endpoint returns only the authenticated user's own links.
+
+Additional filter parameters available for admins:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `search` | string | Search by address, target, or description |
+| `user` | string | Filter by user email |
+| `domain` | string | Filter by domain address |
+| `banned` | boolean | Filter by banned status |
+| `anonymous` | boolean | Filter anonymous links (no owner) |
+| `has_domain` | boolean | Filter links with a custom domain attached |
+
+### Edit any link
+
+```http
+PATCH /api/v2/links/admin/:id
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "target": "https://new-destination.example.com",
+  "address": "new-slug",
+  "description": "Updated description",
+  "expire_in": "7 days",
+  "password": "newpassword"
+}
+```
+
+All fields are optional — include only what you want to change. At least one field must be different from the current value.
+
+### Ban a link
+
+```http
+POST /api/v2/links/admin/ban/:id
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "domain": true,
+  "host": true,
+  "user": false,
+  "userLinks": false
+}
+```
+
+| Body field | Description |
+|---|---|
+| `domain` | Also adds the link's target domain to the banned domains list. |
+| `host` | Also bans the resolved IP address of the target domain. |
+| `user` | Also bans the user who owns the link. |
+| `userLinks` | Also bans all other links owned by the same user. |
+
+Banned links return an HTTP redirect to the `/banned` page when visitors try to follow them.
+
+---
+
+## Domain management
+
+### View all domains (admin)
+
+```http
+GET /api/v2/domains/admin
+X-API-KEY: <admin-api-key>
+```
+
+Filter parameters:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `search` | string | Filter by domain address |
+| `user` | string | Filter by owning user's email |
+| `banned` | boolean | Filter by banned status |
+| `owner` | boolean | `true` = only domains with an owner, `false` = unclaimed domains |
+
+### Add a domain (admin)
+
+```http
+POST /api/v2/domains/admin
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "address": "blocked-domain.com",
+  "banned": true,
+  "homepage": ""
+}
+```
+
+Admins can add domains directly to the banned list by setting `"banned": true`. This is useful for pre-emptively blocking domains before they are registered by users.
+
+### Delete a domain (admin)
+
+```http
+DELETE /api/v2/domains/admin/:id
+X-API-KEY: <admin-api-key>
+```
+
+Add `?links=true` to also delete all links associated with the domain:
+
+```http
+DELETE /api/v2/domains/admin/:id?links=true
+```
+
+### Ban a domain
+
+```http
+POST /api/v2/domains/admin/ban/:id
+X-API-KEY: <admin-api-key>
+Content-Type: application/json
+
+{
+  "links": true,
+  "user": false
+}
+```
+
+| Body field | Description |
+|---|---|
+| `links` | Also bans all links served under this domain. |
+| `user` | Also bans the user who owns this domain. |
+
+---
+
+## Admin API route summary
+
+<Note>
+  All admin API routes require an API key belonging to an admin account. Requests authenticated with a non-admin key receive a 401 error.
+</Note>
+
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/v2/links?all=true` | List all links (admin only) |
+| `PATCH` | `/api/v2/links/admin/:id` | Edit any link |
+| `POST` | `/api/v2/links/admin/ban/:id` | Ban a link |
+| `GET` | `/api/v2/users/admin` | List all users |
+| `POST` | `/api/v2/users/admin` | Create a user |
+| `DELETE` | `/api/v2/users/admin/:id` | Delete a user |
+| `POST` | `/api/v2/users/admin/ban/:id` | Ban a user |
+| `GET` | `/api/v2/domains/admin` | List all domains |
+| `POST` | `/api/v2/domains/admin` | Add a domain |
+| `DELETE` | `/api/v2/domains/admin/:id` | Delete a domain |
+| `POST` | `/api/v2/domains/admin/ban/:id` | Ban a domain |
+
+For request and response schemas, see [API reference: Links](/api-reference/links).

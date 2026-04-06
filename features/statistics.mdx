@@ -1,0 +1,157 @@
+---
+title: "Statistics"
+description: "Track click activity for your shortened links with breakdowns by browser, OS, country, and referrer."
+---
+
+## What Kutt tracks
+
+Every time a visitor follows one of your short links, Kutt records a visit. The following data points are captured per visit:
+
+| Data point | Details |
+|---|---|
+| **Browser** | Chrome, Edge, Firefox, IE, Opera, Safari, or Other |
+| **Operating system** | Android, iOS, Linux, macOS, Windows, or Other |
+| **Country** | Derived from the `CF-IPCountry` header (set by Cloudflare). Falls back to `xx` when the header is absent. |
+| **Referrer** | The `Referer` request header, lowercased. Empty string when not present. |
+
+Stats are aggregated by hour. Multiple visits within the same clock-hour are stored in a single visit row rather than as separate records.
+
+---
+
+## Bot filtering
+
+Kutt uses the [`isbot`](https://github.com/nicolo-ribaudo/isbot) library to detect bot traffic based on the `User-Agent` header. Visits from known bots are **not** counted in your statistics and do not increment the link's `visit_count`.
+
+<Note>
+  Only links owned by a registered user track statistics. Links created anonymously (when `DISALLOW_ANONYMOUS_LINKS=false`) do not record visit data.
+</Note>
+
+---
+
+## Time ranges
+
+Statistics are available across four time ranges:
+
+| Key | Covers | `views` array length |
+|---|---|---|
+| `lastDay` | Last 24 hours | 24 elements (one per hour) |
+| `lastWeek` | Last 7 days | 7 elements (one per day) |
+| `lastMonth` | Last 30 days | 30 elements (one per day) |
+| `lastYear` | Last 12 months | 12 elements (one per month) |
+
+Each element in the `views` array represents the total visit count for that period slot. The last element in the array is the most recent slot.
+
+---
+
+## Privacy
+
+Statistics are private to the link owner. Only the user who created the link can view its stats. Admins can also access stats for any link on the instance.
+
+---
+
+## Accessing statistics
+
+### Via the dashboard
+
+Open your link dashboard, find a link, and click the statistics icon. The stats page shows charts for each time range along with the browser, OS, country, and referrer breakdowns.
+
+### Via the API
+
+```http
+GET /api/v2/links/:id/stats
+X-API-KEY: <your-api-key>
+```
+
+Replace `:id` with the UUID of the link (the `id` field returned when you created or fetched the link).
+
+---
+
+## Stats response structure
+
+The API returns a single JSON object that merges the link's own fields with the four time-range statistics. Each time range contains a `views` array and a `stats` breakdown object.
+
+```json
+{
+  "id": "3f2e1a00-0000-0000-0000-000000000001",
+  "address": "abc123",
+  "link": "https://kutt.example.com/abc123",
+  "target": "https://www.example.com/landing-page",
+  "visit_count": 142,
+  "password": false,
+  "banned": false,
+  "created_at": "2025-01-15T10:00:00.000Z",
+  "updated_at": "2025-03-20T14:32:00.000Z",
+  "updatedAt": "2025-04-06T09:00:00.000Z",
+  "lastDay": {
+    "total": 5,
+    "views": [0, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+    "stats": {
+      "browser": [
+        { "name": "chrome", "value": 3 },
+        { "name": "firefox", "value": 1 },
+        { "name": "safari", "value": 1 },
+        { "name": "edge", "value": 0 },
+        { "name": "ie", "value": 0 },
+        { "name": "opera", "value": 0 },
+        { "name": "other", "value": 0 }
+      ],
+      "os": [
+        { "name": "windows", "value": 2 },
+        { "name": "macos", "value": 2 },
+        { "name": "android", "value": 1 },
+        { "name": "ios", "value": 0 },
+        { "name": "linux", "value": 0 },
+        { "name": "other", "value": 0 }
+      ],
+      "country": [
+        { "name": "us", "value": 3 },
+        { "name": "de", "value": 1 },
+        { "name": "fr", "value": 1 }
+      ],
+      "referrer": [
+        { "name": "twitter.com", "value": 2 },
+        { "name": "", "value": 3 }
+      ]
+    }
+  },
+  "lastWeek": {
+    "total": 38,
+    "views": [4, 7, 3, 8, 6, 5, 5],
+    "stats": { "browser": [], "os": [], "country": [], "referrer": [] }
+  },
+  "lastMonth": {
+    "total": 110,
+    "views": [3, 4, 2, 5, 6, 3, 4, 2, 3, 5, 6, 4, 3, 2, 4, 5, 3, 4, 2, 3, 5, 4, 3, 4, 2, 3, 4, 5, 3, 4],
+    "stats": { "browser": [], "os": [], "country": [], "referrer": [] }
+  },
+  "lastYear": {
+    "total": 142,
+    "views": [0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 25, 110],
+    "stats": { "browser": [], "os": [], "country": [], "referrer": [] }
+  }
+}
+```
+
+### Field reference
+
+| Field | Type | Description |
+|---|---|---|
+| `lastDay.views` | `number[24]` | Hourly visit counts for the past 24 hours. Index 23 = most recent hour. |
+| `lastWeek.views` | `number[7]` | Daily visit counts for the past 7 days. Index 6 = today. |
+| `lastMonth.views` | `number[30]` | Daily visit counts for the past 30 days. Index 29 = today. |
+| `lastYear.views` | `number[12]` | Monthly visit counts for the past 12 months. Index 11 = current month. |
+| `*.total` | `number` | Sum of all views in that period. |
+| `*.stats.browser` | `array` | Per-browser counts as `{ name, value }` pairs. |
+| `*.stats.os` | `array` | Per-OS counts as `{ name, value }` pairs. |
+| `*.stats.country` | `array` | Per-country counts as `{ name, value }` pairs. Country codes are ISO 3166-1 alpha-2, lowercased. |
+| `*.stats.referrer` | `array` | Per-referrer domain counts as `{ name, value }` pairs. |
+
+---
+
+## Redis caching
+
+When Redis is enabled (`REDIS_ENABLED=true`), stats responses are cached in Redis for 60 seconds. This means very recent visits may not appear in the API response immediately.
+
+---
+
+For the full API specification including authentication requirements, see [API reference: Links](/api-reference/links).

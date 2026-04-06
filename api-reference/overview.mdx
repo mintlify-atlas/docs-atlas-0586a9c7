@@ -1,0 +1,57 @@
+---
+title: "API overview"
+description: "The Kutt REST API lets you create and manage short links programmatically."
+---
+
+## Base URL
+
+All API requests are made to the following base URL:
+
+```
+https://kutt.it/api/v2
+```
+
+If you are self-hosting Kutt, replace the domain with your own:
+
+```
+https://yourdomain.com/api/v2
+```
+
+## Response format
+
+All endpoints return JSON unless otherwise noted.
+
+## Authentication
+
+Every request must include your API key in the `X-API-KEY` header. See [Authentication](/api-reference/authentication) for details.
+
+## Health check
+
+You can verify that the API is reachable with a simple health check:
+
+```bash
+GET https://kutt.it/api/v2/health
+```
+
+A successful response returns the plain-text string `OK` with HTTP status `200`.
+
+## Rate limiting
+
+Rate limiting can be enabled on self-hosted instances by setting the `ENABLE_RATE_LIMIT` environment variable. When rate limiting is active and you exceed the allowed number of requests, the API returns an HTTP `429` response.
+
+## Explore the API
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/authentication">
+    Learn how to authenticate your API requests using an API key.
+  </Card>
+  <Card title="Links" icon="link" href="/api-reference/links">
+    Create, list, update, delete, and retrieve stats for short links.
+  </Card>
+  <Card title="Domains" icon="globe" href="/api-reference/domains">
+    Add and remove custom domains for use with your short links.
+  </Card>
+  <Card title="Users" icon="user" href="/api-reference/users">
+    Retrieve your account information and linked domains.
+  </Card>
+</CardGroup>

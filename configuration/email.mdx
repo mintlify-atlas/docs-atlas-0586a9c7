@@ -1,0 +1,92 @@
+---
+title: "Email"
+description: "Configure SMTP email to enable user registration, password reset, email verification, and link reporting."
+---
+
+Kutt uses [Nodemailer](https://nodemailer.com/) to send transactional emails. Email support is disabled by default. When you enable it, Kutt gains the ability to:
+
+- Verify email addresses during registration
+- Send password reset links
+- Notify users of email address changes
+- Forward link reports to your `REPORT_EMAIL` address
+
+<Warning>
+  When `MAIL_ENABLED=false`, user registration is disabled regardless of the `DISALLOW_REGISTRATION` setting. Kutt requires email verification to create accounts, so there is no way to register without a working mail configuration.
+</Warning>
+
+## Configuration
+
+Set `MAIL_ENABLED=true` and provide your SMTP credentials:
+
+```bash
+MAIL_ENABLED=true
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=kutt@example.com
+MAIL_PASSWORD=your-smtp-password
+MAIL_FROM=Kutt <kutt@example.com>
+```
+
+<ParamField path="MAIL_ENABLED" type="boolean" default="false">
+  Set to `true` to enable all email functionality. When `false`, registration, email verification, password reset, and report submission are all disabled.
+</ParamField>
+
+<ParamField path="MAIL_HOST" type="string" default="">
+  Hostname of your SMTP server (e.g. `smtp.mailgun.org`, `smtp.sendgrid.net`).
+</ParamField>
+
+<ParamField path="MAIL_PORT" type="number" default="587">
+  Port your SMTP server listens on. Common values:
+  - `587` — STARTTLS (recommended, use with `MAIL_SECURE=false`)
+  - `465` — SSL/TLS (use with `MAIL_SECURE=true`)
+  - `25` — plain SMTP (not recommended)
+</ParamField>
+
+<ParamField path="MAIL_SECURE" type="boolean" default="false">
+  When `true`, Kutt connects using SSL/TLS from the start (port 465). When `false`, Kutt connects in plain text and upgrades to TLS via STARTTLS if the server supports it (port 587).
+</ParamField>
+
+<ParamField path="MAIL_USER" type="string" default="">
+  The username used to authenticate with your SMTP server.
+</ParamField>
+
+<ParamField path="MAIL_PASSWORD" type="string" default="">
+  The password for the SMTP user. You can load this from a file using `MAIL_PASSWORD_FILE`.
+</ParamField>
+
+<ParamField path="MAIL_FROM" type="string" default="">
+  The sender address shown in outgoing emails. Accepts a plain address (`kutt@example.com`) or a display name with address (`Kutt <kutt@example.com>`). When left empty, `MAIL_USER` is used as the sender address.
+</ParamField>
+
+---
+
+## Example: common SMTP provider
+
+```bash
+# Gmail (app password required — standard passwords are blocked)
+MAIL_ENABLED=true
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=you@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM=Kutt <you@gmail.com>
+```
+
+```bash
+# Mailgun
+MAIL_ENABLED=true
+MAIL_HOST=smtp.mailgun.org
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=postmaster@mg.yourdomain.com
+MAIL_PASSWORD=your-mailgun-smtp-password
+MAIL_FROM=Kutt <no-reply@yourdomain.com>
+```
+
+---
+
+## Advanced configuration
+
+Kutt passes your settings directly to Nodemailer. For advanced options such as custom TLS certificates, connection timeouts, or proxy support, refer to the [Nodemailer SMTP transport documentation](https://nodemailer.com/smtp/).

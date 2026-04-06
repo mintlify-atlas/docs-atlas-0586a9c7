@@ -1,28 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Kutt",
+  "projectType": "saas",
+  "projectName": "Kutt",
+  "projectDescription": "A self-hostable, open-source URL shortener with custom domains, link statistics, user management, and a RESTful API.",
   "theme": "luma",
-  "colors": {
-    "primary": "#fb2323",
-    "light": "#fc7e8c",
-    "dark": "#8a3f42"
-  },
-  "favicon": "https://media.brand.dev/7d4d23c1-abad-4f16-b50d-09079e7655d1.png",
-  "logo": {
-    "light": "https://media.brand.dev/86793988-0aae-4583-b355-a8aeeffa43d9.png",
-    "dark": "https://media.brand.dev/86793988-0aae-4583-b355-a8aeeffa43d9.png"
-  },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/thedevs-network/kutt"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/thedevs-network/kutt"
-    }
-  },
+  "primaryColor": "#fb2323",
+  "lightColor": "#fc7e8c",
+  "darkColor": "#8a3f42",
   "navigation": {
     "tabs": [
       {
@@ -84,5 +67,30 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "Custom domain support for shortened links",
+    "Self-hostable with zero configuration needed",
+    "Multiple database backends: SQLite, PostgreSQL, MySQL/MariaDB",
+    "Optional Redis cache for performance",
+    "Private link statistics (browser, OS, country, referrer)",
+    "Password-protected and expiring links",
+    "Admin dashboard to manage users, links, and domains",
+    "RESTful API with API key authentication",
+    "OpenID Connect (OIDC) login support",
+    "Customizable themes via CSS, images, and Handlebars views",
+    "Rate limiting for API routes",
+    "Browser extensions for Chrome and Firefox"
+  ],
+  "publicApiSurface": [
+    "GET /api/v2/health",
+    "GET /api/v2/links",
+    "POST /api/v2/links",
+    "PATCH /api/v2/links/:id",
+    "DELETE /api/v2/links/:id",
+    "GET /api/v2/links/:id/stats",
+    "POST /api/v2/domains",
+    "DELETE /api/v2/domains/:id",
+    "GET /api/v2/users"
+  ]
 }

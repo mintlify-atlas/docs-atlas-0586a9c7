@@ -1,0 +1,89 @@
+---
+title: "OpenID Connect"
+description: "Enable single sign-on with any OIDC-compatible identity provider."
+---
+
+Kutt supports OpenID Connect (OIDC), allowing users to log in with an existing identity provider such as Keycloak, Authentik, Auth0, Okta, Google, or any other OIDC-compatible service.
+
+## How it works
+
+When OIDC is enabled, a **Sign in with SSO** button appears on the login page. Clicking it redirects the user to your identity provider. After a successful login, the provider redirects back to Kutt with an ID token. Kutt reads the user's email from that token and either signs them in or creates a new account automatically.
+
+From the user's perspective:
+
+1. User visits the Kutt login page and clicks **Sign in with SSO**.
+2. The browser redirects to the identity provider's login screen.
+3. The user authenticates (password, MFA, passkey — whatever the provider requires).
+4. The provider redirects back to Kutt.
+5. Kutt logs the user in or creates their account if it does not exist yet.
+
+## Configuration
+
+```bash
+OIDC_ENABLED=true
+OIDC_ISSUER=https://sso.example.com/realms/myrealm
+OIDC_CLIENT_ID=kutt
+OIDC_CLIENT_SECRET=your-client-secret
+
+# Optional — defaults shown
+OIDC_SCOPE=openid profile email
+OIDC_EMAIL_CLAIM=email
+```
+
+<ParamField path="OIDC_ENABLED" type="boolean" default="false">
+  Set to `true` to enable OIDC login.
+</ParamField>
+
+<ParamField path="OIDC_ISSUER" type="string" default="">
+  The issuer URL of your identity provider. Kutt fetches the OpenID Connect discovery document from `{OIDC_ISSUER}/.well-known/openid-configuration` to discover endpoints automatically. Example: `https://sso.example.com/realms/myrealm`.
+</ParamField>
+
+<ParamField path="OIDC_CLIENT_ID" type="string" default="">
+  The client ID registered in your identity provider for this Kutt instance.
+</ParamField>
+
+<ParamField path="OIDC_CLIENT_SECRET" type="string" default="">
+  The client secret corresponding to `OIDC_CLIENT_ID`. You can load this from a file using `OIDC_CLIENT_SECRET_FILE`.
+</ParamField>
+
+<ParamField path="OIDC_SCOPE" type="string" default="openid profile email">
+  Space-separated list of OIDC scopes to request. The `openid` scope is required. Include `email` to ensure the email claim is present in the token.
+</ParamField>
+
+<ParamField path="OIDC_EMAIL_CLAIM" type="string" default="email">
+  The name of the claim in the ID token that holds the user's email address.
+
+  <Note>
+    Most providers use the standard `email` claim, so you rarely need to change this. Set it to a different value if your provider maps the email to a non-standard field (e.g. `userEmail`, `mail`, or a custom claim).
+  </Note>
+</ParamField>
+
+---
+
+## Disabling password login
+
+If you want OIDC to be the only way to log in, set `DISALLOW_LOGIN_FORM=true`. This hides the email/password form and leaves only the SSO button.
+
+```bash
+OIDC_ENABLED=true
+OIDC_ISSUER=https://sso.example.com/realms/myrealm
+OIDC_CLIENT_ID=kutt
+OIDC_CLIENT_SECRET=your-client-secret
+DISALLOW_LOGIN_FORM=true
+```
+
+<Warning>
+  If you set `DISALLOW_LOGIN_FORM=true` and your OIDC provider becomes unavailable, no one will be able to log in — including administrators. Make sure you have a recovery plan before enabling this in production.
+</Warning>
+
+---
+
+## Setting up the client in your provider
+
+When registering Kutt as a client in your identity provider, set the **redirect URI** (also called callback URL) to:
+
+```
+https://your-kutt-domain.com/login/oidc
+```
+
+The exact field name varies by provider (redirect URI, allowed callback URL, valid redirect URI, etc.), but the value is the same.

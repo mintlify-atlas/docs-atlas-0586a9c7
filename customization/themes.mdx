@@ -1,0 +1,113 @@
+---
+title: "Themes & customization"
+description: "Override Kutt's styles, images, and HTML templates using the custom/ folder."
+---
+
+Kutt lets you add your own styles, swap out images, and render custom HTML templates — all without touching the core codebase. Place your files inside the `custom/` folder at the root of your Kutt installation.
+
+## Folder structure
+
+```
+custom/
+├─ css/
+│  ├─ custom1.css
+│  ├─ custom2.css
+├─ images/
+│  ├─ logo.png
+│  ├─ favicon.ico
+├─ views/
+│  ├─ partials/
+│  │  ├─ footer.hbs
+│  ├─ 404.hbs
+```
+
+Each subfolder maps to a specific type of customization described below.
+
+## CSS customization
+
+Place your CSS files in `custom/css/`. Kutt loads them alongside its default styles, so you can override specific rules without replacing everything.
+
+- You can add as many files as you want: `custom1.css`, `custom2.css`, and so on.
+- Each file is served at `/css/<file>.css`.
+- **Special case:** if you name a file `styles.css`, it replaces Kutt's original `styles.css` entirely instead of appending to it.
+
+## Image customization
+
+Place your images in `custom/images/`. To replace a built-in image, give your file the same name as the corresponding file in `static/images/`.
+
+The built-in images are:
+
+| File | Description |
+|---|---|
+| `logo.png` | Main logo |
+| `favicon.ico` | Browser favicon |
+| `favicon-16x16.png` | 16 × 16 favicon |
+| `favicon-32x32.png` | 32 × 32 favicon |
+| `favicon-196x196.png` | 196 × 196 favicon |
+| `card.png` | Open Graph / social card image |
+
+Each image is served at `/images/<image>.<format>`.
+
+## View customization
+
+Kutt uses [Handlebars](https://handlebarsjs.com/) (`.hbs`) templates for its HTML pages. To override a template, create a file in `custom/views/` that mirrors the path of the original file in `server/views/`.
+
+For example, to override the footer partial:
+
+```
+custom/views/partials/footer.hbs
+```
+
+The available view files are:
+
+```
+server/views/
+├─ partials/
+│  ├─ footer.hbs
+│  ├─ header.hbs
+│  ├─ shortener.hbs
+│  ├─ stats.hbs
+│  └─ ...
+├─ 404.hbs
+├─ homepage.hbs
+├─ login.hbs
+├─ settings.hbs
+└─ ...
+```
+
+<Warning>
+Kutt updates may rename or restructure view files. If an original file is renamed and your custom file still uses the old name, your override will silently stop working. Check your custom views after each Kutt upgrade.
+</Warning>
+
+## Example theme: Crimson
+
+Crimson is the official example theme. It demonstrates custom styles, images, and views working together.
+
+- [Get the Crimson theme →](https://github.com/thedevs-network/kutt-customizations/tree/main/themes/crimson)
+- [Browse all themes and customizations →](https://github.com/thedevs-network/kutt-customizations)
+
+## Usage with Docker
+
+<Steps>
+  <Step title="Ensure the custom volume is accessible">
+    If you're using the official Docker image, make sure `/kutt/custom` is mounted as a volume. The default `docker-compose.yml` already includes this mount.
+
+    If you built the image locally, the `custom/` folder is already included in the image.
+  </Step>
+  <Step title="Copy your files into the container">
+    Use `docker cp` to copy your local `custom/` folder into the running container:
+
+    ```bash
+    docker cp custom kutt-server-1:/kutt
+    ```
+
+    Replace `kutt-server-1` with your actual container name.
+  </Step>
+  <Step title="Restart the Kutt container">
+    Changes take effect after a restart:
+
+    ```bash
+    docker restart kutt-server-1
+    ```
+  </Step>
+</Steps>
